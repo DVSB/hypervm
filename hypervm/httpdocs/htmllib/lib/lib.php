@@ -13,7 +13,7 @@ function getNumForString($name)
 
 function is_openvz()
 {
-	return lxfile_exists("/proc/user_beancounters");
+	return lxfile_exists("/proc/user_beancounters");  
 }
 
 
@@ -583,7 +583,7 @@ function changeDriverFunc($server, $class, $pgm)
 	if (is_array($driver[$class])) {
 		if (!array_search_bool($pgm, $driver[$class])) {
 			$str = implode(" ", $driver[$class]);
-			print("The driver name isn't correct: Available drivers for $class: $str\n");
+			print("The class name " . $class . " isn't correct.\nAvailable drivers for $class: $str\n");
 			return;
 		}
 	} else if ($driver[$class] !== $pgm) {
@@ -602,7 +602,7 @@ function changeDriverFunc($server, $class, $pgm)
 
 	$dr->write();
 
-	print("Successfully changed Driver for $class on $server->nname to $pgm\n");
+	print("Successfully changed driver to $pgm for class $class on server $server->nname\n");
 }
 
 function slave_get_db_pass()
@@ -1155,9 +1155,9 @@ function mycount($olist)
 
 
 
-
 function full_validate_ipaddress($ip, $variable = 'ipaddress')
 {
+	// variable is nname or ipaddress
 	global $gbl, $sgbl, $login, $ghtml; 
 	global $global_dontlogshell;
 	$global_dontlogshell = true;
@@ -1166,13 +1166,16 @@ function full_validate_ipaddress($ip, $variable = 'ipaddress')
 
 
 	if (!validate_ipaddress($ip)) {
-		throw new lxException("invalid_ipaddress", $variable);
+		throw new lxException('Invalid IP address: ' . $ip, $variable);
 	}
 
-	$ret = lxshell_return("ping", "-n", "-c", "1", "-w", "5", $ip);
-
-	if (!$ret) {
-		throw new lxexception("some_other_host_uses_this_ip", $variable);
+	if(isIPV6($ip))
+             $ret = lxshell_return("ping6", "-n", "-c", "1", "-w", "5", $ip);
+	else $ret = lxshell_return("ping", "-n", "-c", "1", "-w", "5", $ip);
+	
+	// If the return status is 1, the ping fail and nobody uses. But if return is 0, somebody is using the IP
+	if(intval($ret) !== 1) { 
+		throw new lxexception('Another host is using the IP ' . $ip . ' and it is responding to the IP ping. Please you will ensure to use an available IP to add.', $variable);
 	}
 
 	$global_dontlogshell = false;
@@ -1213,7 +1216,7 @@ function do_actionlog($login, $object, $action, $subaction)
 
 function validate_email($email)
 {
-	if(!eregi("^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$", $email)){
+	if(!preg_match("#^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$#", $email)){
 		return false;
 	}
 	return true;
@@ -1223,11 +1226,23 @@ function validate_email($email)
 function validate_ipaddress_and_throw($ip, $variable)
 {
 	if (!validate_ipaddress($ip)) {
-		throw new lxException("invalid_ipaddress", $variable);
+		throw new lxException('Invalid IP address: ' . $ip, $variable);
 	}
 }
 
+
 function validate_ipaddress($ip)
+{
+    if(strchr($ip, '.'))  // most likely IPV4
+        return validate_ipaddressV4($ip);
+    else if(strchr($ip, ':'))
+        return validate_ipaddressV6($ip);
+    
+    return 0;	//neither
+}
+
+
+function validate_ipaddressV4($ip)
 {
 	$ind= explode(".",$ip);
 	$d=0;
@@ -1249,6 +1264,53 @@ function validate_ipaddress($ip)
 	} else  {
 		return 0;
 	}
+}
+
+function validate_ipaddressV6($ip)
+{
+	$ip = strtoupper($ip);
+	$ind = expandIP6ToArray($ip);
+	$d=0;
+	$c=0;
+
+	if(count($ind) >8) {
+	    throw new lxException('Invalid IP address: ' . $ip . ' Not enough parts', $variable);
+
+	    return 0;
+	}
+
+	foreach($ind as $in) {
+		$valid = preg_match("/[0_9ABCDEF]*/", $in);
+		if(!$valid){
+                        throw new lxException('Invalid IP address: ' . $ip . ' Contains not hexa characters', $variable);
+			return 0;
+                    }
+	}
+	return 1;
+}
+
+function expandIP6ToArray($ip){
+        //Make sure we have 8 parts
+        while(count(explode(":",$ip)) < 8){
+                $ip = str_replace("::",":::",$ip);
+        } 
+          
+        $ipa = explode(":",$ip);
+        for($i=0;$i<8;$i++){    
+                $ipa[$i]=str_pad($ipa[$i],4,"0",STRPADLEFT);
+        } 
+        return $ipa;
+} 
+
+// !! we only check for . and : !!
+// NO validation done!
+function isIPV6($ip)
+{
+  if(strchr($ip, ':') && !strchr($ip, '.')) return true;
+  if(strchr($ip, '.') && !strchr($ip, ':')) return false;
+  
+  throw new lxException('Invalid IP address: ' . $ip . ' Contains both dot and colon!', $variable);
+    return false;  
 }
 
 function make_sure_directory_is_lxlabs($file)
@@ -2189,6 +2251,7 @@ function appvault_dbfilter($inputfile, $outputfile, $cont)
 
 function installLxetc()
 {
+    return; //TODO: Remove this
 	if (!lxfile_exists("/root/.etc/pfixed")) {
 		if (lxfile_exists("/root/.etc/")) {
 			lxfile_rm_rec("/root/.etc/");
@@ -2865,7 +2928,10 @@ function copy_script()
 // dterweij
 function copy_image()
 {
-	global $gbl, $sgbl, $login, $ghtml; 
+// TODO Remove this
+    return ;
+
+	global $gbl, $sgbl, $login, $ghtml;
 	$prgm = $sgbl->__var_program_name;
 
 	lxfile_cp_content("tmpimg/", "img/image/collage/button/");
@@ -2993,17 +3059,7 @@ function if_not_admin_complain_and_exit()
 function initProgram($ctype = NULL)
 {
 	global $gbl, $sgbl, $login, $ghtml;
-
-   // print(ini_get("error_log"));
-   // print(ini_set("error_log", getreal("Erros")));
-
-	// Hack arond the iis setcookie bug
-	if (WindowsOs() && $sgbl->isKloxo()) {
-		//setcookie("kloxo-classname", "client", time() + 379999999);
-		//setcookie("kloxo-clientname", "admin", time() + 379999999);
-	}
-	initProgramlib($ctype);
-
+    initProgramlib($ctype);
 }
 
 
@@ -3748,6 +3804,7 @@ function get_class_for_table($table)
 
 function is_centosfive()
 {
+    //TODO Fix this like Kloxo lib
 	$cont = lfile_get_contents("/etc/redhat-release");
 	if (csa($cont, " 5 ") || csa($cont, " 5.")) {
 		return true;
@@ -3995,6 +4052,8 @@ function checkClusterDiskQuota()
 
 function find_closest_mirror()
 {
+
+    //TODO: Function is not called.. remove?
 	$v = curl_general_get("lxlabs.com/mirrorlist/");
 	$v = trim($v);
 	$vv = explode("\n", $v);

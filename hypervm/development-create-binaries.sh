@@ -2,7 +2,7 @@
 #    HyperVM, Server Virtualization GUI for OpenVZ and Xen
 #
 #    Copyright (C) 2000-2009	LxLabs
-#    Copyright (C) 2009-2010	LxCenter
+#    Copyright (C) 2009-2011	LxCenter
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -25,13 +25,9 @@ echo "################################"
 echo "### Start compiling"
 # Compile C files
 # Part 1
-cd sbin/console
-make ; make install
-cd ../../
-# Part 2
-cd bin/common
-make ; make install
-cd ../../
+cd src/
+make all; make install
+cd ../
 echo "### Finished"
 echo "################################"
 #

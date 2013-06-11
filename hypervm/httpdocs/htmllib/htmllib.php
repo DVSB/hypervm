@@ -6695,8 +6695,9 @@ class HtmlLib
 	function print_multiselect($form, $variable, $rowuniqueid, $rowclass, $rowcount)
 	{
 		global $gbl, $sgbl, $login, $ghtml;
-		$m_value = "";
+
 		$_t_name = $this->getcgikey($variable->name);
+		$this->checkForScript($this->$_t_name);
 		$m_value = $this->$_t_name;
 		$ts_name = "ts_$variable->name";
 		$ts_name2 = "ts_{$variable->name}2";
@@ -6989,12 +6990,15 @@ class HtmlLib
 
 
 		if ($variable->value != "") {
+			$this->checkForScript($variable->value);
 			$m_value = $variable->value;
 		} else {
 			if (trim($variable->texttype) != "password") {
 				$m_value = null;
-				if (isset($prevvar[trim($variable->name)])) {
-					$m_value = $prevvar[trim($variable->name)];
+				$index = trim($variable->name);
+				if (isset($prevvar[$index])) {
+					$this->checkForScript($prevvar[$index]);
+					$m_value = $prevvar[$index];
 				}
 			}
 		}
@@ -7206,6 +7210,7 @@ class HtmlLib
 			case "checkbox":
 				$m_value = null;
 				if (isset($prevvar[trim($variable->name)])) {
+					$this->checkForScript($prevvar[trim($variable->name)]);
 					$m_value = $prevvar[trim($variable->name)];
 				}
 				$checkedvalue = trim($variable->checked);
@@ -7223,9 +7228,9 @@ class HtmlLib
 
 
 			case "select":
-				$m_value = "";
 				$m_value = null;
 				if (isset($prevvar[trim($variable->name)])) {
+					$this->checkForScript($prevvar[trim($variable->name)]);
 					$m_value = $prevvar[trim($variable->name)];
 				}
 				print("$variable_description <br> ");
@@ -8914,7 +8919,7 @@ function print_end()
 -->
 
     </td><td width=5 rowspan=2>&nbsp;</td> </tr> 
-	<tr><td background="<?=$tbg; ?>"></td> <td height=20 class=copyright valign=top align=right> © 2007 Copyright Lxlabs</td></tr>
+	<tr><td background="<?=$tbg; ?>"></td> <td height=20 class=copyright valign=top align=right> ï¿½ 2007 Copyright Lxlabs</td></tr>
   	<tr><td colspan=3 background=<?=$imgbordermain ?> height=5> </td></tr>
 	</table> 
 
@@ -9039,14 +9044,6 @@ function oldlpanel_help()
 	$helpimg = $img_path . "/";
 
 
-	/*
-<script>
-if (!document.layers)
-document.write('<div id="divStayTopLeft" style="position:relative; z-index:5">')
-else
-document.write('<layer id="divStayTopLeft" style="position:relative; z-index:5">')
-</script>
-*/
 	?>
 <table cellpadding="0" width=100% cellspacing="0" border="0" align=center>
 
@@ -9056,80 +9053,11 @@ document.write('<layer id="divStayTopLeft" style="position:relative; z-index:5">
 
 
 
-        <?php if (if_demo()) { ?> 
-		<tr> <td align=center><table > <tr align=center><td align=center nowrap><a href=/live target=_blank class=tableheadtext>Click Here for Live Support.</a></td></tr> </table> </td></tr>
-		</table> 
-		<?php } 
+		<?php
 
-		
+
 		return;
 		
-		/*
-		?> 
-
-<script>
-if (!document.layers)
-document.write('</div>')
-else
-document.write('</layer">')
-</script>
-	
-		
-<script type="text/javascript">
-//Enter "frombottom" or "fromtop"
-var verticalpos="fromtop"
-
-if (!document.layers)
-document.write('</div>')
-
-function JSFX_FloatTopDiv()
-{
-        var startX = 0,
-        startY = 250;
-		var delay =5000;
-        var ns = (navigator.appName.indexOf("Netscape") != -1);
-        var d = document;
-        function ml(id)
-        {
-                var el=d.getElementById?d.getElementById(id):d.all?d.all[id]:d.layers[id];
-                if(d.layers)el.style=el;
-                el.sP=function(x,y){this.style.left=x;this.style.top=y;};
-                el.x = startX;
-                if (verticalpos=="fromtop")
-                el.y = startY;
-                else{
-                el.y = ns ? pageYOffset + innerHeight : document.body.scrollTop + document.body.clientHeight;
-                el.y -= startY;
-                }
-                return el;
-        }
-        window.stayTopLeft=function()
-        {
-
-                if (verticalpos=="fromtop")
-                {
-                var pY = ns ? pageYOffset : document.body.scrollTop;
-                ftlObj.y += (pY + startY - ftlObj.y)/10;
-                }
-                else
-                {
-                var pY = ns ? pageYOffset + innerHeight : document.body.scrollTop + document.body.clientHeight;
-                ftlObj.y += (pY - startY - ftlObj.y)/10;
-                }
-                ftlObj.sP(ftlObj.x, ftlObj.y);
-			    setTimeout("stayTopLeft()", 1);
-        }
-        ftlObj = ml("divStayTopLeft");
-        stayTopLeft();
-}
-JSFX_FloatTopDiv();
-        </script>
-
-
-<?php
-		*/
-
-
 }
 
 
