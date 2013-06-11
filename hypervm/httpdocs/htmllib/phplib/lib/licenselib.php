@@ -42,7 +42,8 @@ class License extends Lxdb
 				$lo = $login->getObject('license');
 				$lic = $login->getObject('license')->licensecom_b;
 
-				if ($lic->lic_pserver_num != "Unlimited" && $lic->lic_client_num != "Unlimited" && $lic->lic_vps_num != "Unlimited") {
+				// MR -- possible to change VPS for 5 to unlimited
+			//	if ($lic->lic_pserver_num != "Unlimited" && $lic->lic_client_num != "Unlimited" && $lic->lic_vps_num != "Unlimited") {
 
 					$vlist['__v_button'] = 'Set License to unlimited usage';
 
@@ -56,11 +57,11 @@ class License extends Lxdb
 						$vlist['lic_client_num_f'] = array('M', $lic->lic_client_num);
 						$vlist['lic_vps_num_f'] = array('M', $lic->lic_vps_num);
 					}
-				} else {
-					$vlist['message'] = array('M', 'HyperVM is OpenSourced, No License is needed.');
-					$vlist['__v_button'] = '';
+			//	} else {
+			//		$vlist['message'] = array('M', 'HyperVM is OpenSourced, No License is needed.');
+			//		$vlist['__v_button'] = '';
 
-				}
+			//	}
 				return $vlist;
 				}
 
